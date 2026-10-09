@@ -4,6 +4,8 @@
 #include "ImGui/FullscreenUI.h"
 #include "ImGui/ImGuiManager.h"
 #include "GS/Renderers/Common/GSRenderer.h"
+
+#include <cstdlib>
 #include "GS/Renderers/Common/GSFieldShiftPolicy.h"
 #include "GS/Renderers/Common/GSInterlaceModePolicy.h"
 #include "GS/Renderers/Common/GSPresentationPolicy.h"
@@ -1126,7 +1128,23 @@ void GSRenderer::VSync(u32 field, bool registers_written, bool idle_frame)
 		g_perfmon.EndFrame(idle_frame);
 
 		if ((g_perfmon.GetFrame() & 0x1f) == 0)
+		{
 			g_perfmon.Update();
+
+			// ARMSX2_GS_STATS=1: per-frame averages of the HW counters over the last 32 frames,
+			// to see what a frame costs the GPU (barriers, passes, pass area) on a given driver.
+			static const bool s_log_stats = std::getenv("ARMSX2_GS_STATS") != nullptr;
+			if (s_log_stats)
+			{
+				Console.WriteLn("GS stats: draws=%.0f barriers=%.0f passes=%.0f area=%.0fk copies=%.0f "
+								"uploads=%.0f readbacks=%.0f waits=%.1f pipes=%.0f",
+					g_perfmon.Get(GSPerfMon::DrawCalls), g_perfmon.Get(GSPerfMon::Barriers),
+					g_perfmon.Get(GSPerfMon::RenderPasses), g_perfmon.Get(GSPerfMon::RenderPassAreaPixels) / 1000.0,
+					g_perfmon.Get(GSPerfMon::TextureCopies), g_perfmon.Get(GSPerfMon::TextureUploads),
+					g_perfmon.Get(GSPerfMon::Readbacks), g_perfmon.Get(GSPerfMon::GpuBlockingWaits),
+					g_perfmon.Get(GSPerfMon::PipelineSwitches));
+			}
+		}
 
 		// Little bit ugly, but we can't do CAS inside the render pass.
 		GSVector4i src_rect;
