@@ -4021,11 +4021,11 @@ GSSelfReadRoadDecision GSDeviceVK::ResolveSelfReadRoad()
 #ifdef __ANDROID__
 	fetch_inputs.any_vendor_trusted = true;
 #else
-	// PowerVR's proprietary driver is the same one on Android and Linux, and Android already trusts
-	// it. Without the in-tile read every software-blended draw gets its own barrier, which on this
-	// tiler is a tile store and reload per draw (FIFA 2002 at 1x: ~940 barriers for ~1000 draws a
-	// frame, GPU pinned at 100% on a GT9524).
-	fetch_inputs.any_vendor_trusted = IsDevicePowerVR();
+	// ⚠️ Not PowerVR on Linux, although it would drop a barrier per software-blended draw. The GT9524
+	// Linux driver (1.18@6307965) advertises rasterization-order access, but a subpassLoad with no
+	// barrier returns what the attachment held when the pass began, flags or not: one fill then one
+	// read-and-add draw in the same pass reads the clear colour. FIFA 2002 drew its pitch as black
+	// tiles on the fetch road.
 #endif
 	const GSVulkanFramebufferFetchDecision fetch_decision = DecideVulkanFramebufferFetch(fetch_inputs);
 	if (fetch_decision.force_key_ignored)

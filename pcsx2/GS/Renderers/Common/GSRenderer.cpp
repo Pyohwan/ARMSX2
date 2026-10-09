@@ -1136,9 +1136,9 @@ void GSRenderer::VSync(u32 field, bool registers_written, bool idle_frame)
 			static const bool s_log_stats = std::getenv("ARMSX2_GS_STATS") != nullptr;
 			if (s_log_stats)
 			{
-				Console.WriteLn("GS stats: draws=%.0f barriers=%.0f passes=%.0f area=%.0fk copies=%.0f "
+				Console.WriteLn("GS stats: frame=%llu draws=%.0f barriers=%.0f passes=%.0f area=%.0fk copies=%.0f "
 								"uploads=%.0f readbacks=%.0f waits=%.1f pipes=%.0f",
-					g_perfmon.Get(GSPerfMon::DrawCalls), g_perfmon.Get(GSPerfMon::Barriers),
+					static_cast<unsigned long long>(g_perfmon.GetFrame()), g_perfmon.Get(GSPerfMon::DrawCalls), g_perfmon.Get(GSPerfMon::Barriers),
 					g_perfmon.Get(GSPerfMon::RenderPasses), g_perfmon.Get(GSPerfMon::RenderPassAreaPixels) / 1000.0,
 					g_perfmon.Get(GSPerfMon::TextureCopies), g_perfmon.Get(GSPerfMon::TextureUploads),
 					g_perfmon.Get(GSPerfMon::Readbacks), g_perfmon.Get(GSPerfMon::GpuBlockingWaits),
