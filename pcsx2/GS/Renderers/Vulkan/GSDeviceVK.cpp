@@ -4020,6 +4020,12 @@ GSSelfReadRoadDecision GSDeviceVK::ResolveSelfReadRoad()
 	fetch_inputs.force_mali_fetch_key = GSConfig.ForceMaliFramebufferFetch;
 #ifdef __ANDROID__
 	fetch_inputs.any_vendor_trusted = true;
+#else
+	// PowerVR's proprietary driver is the same one on Android and Linux, and Android already trusts
+	// it. Without the in-tile read every software-blended draw gets its own barrier, which on this
+	// tiler is a tile store and reload per draw (FIFA 2002 at 1x: ~940 barriers for ~1000 draws a
+	// frame, GPU pinned at 100% on a GT9524).
+	fetch_inputs.any_vendor_trusted = IsDevicePowerVR();
 #endif
 	const GSVulkanFramebufferFetchDecision fetch_decision = DecideVulkanFramebufferFetch(fetch_inputs);
 	if (fetch_decision.force_key_ignored)
