@@ -143,6 +143,16 @@ void* HostSys::CreateSharedMemory(const char* name, size_t size)
 		std::fprintf(stderr, "memfd_create failed: %d\n", errno);
 		return nullptr;
 	}
+#elif defined(__linux__)
+	// Anonymous memfd instead of shm_open: the mapping is never shared by name, and
+	// memfd isn't capped by the /dev/shm mount size (some distros mount it at 100M,
+	// less than the ~285MB main memory block).
+	const int fd = memfd_create(name, MFD_CLOEXEC);
+	if (fd < 0)
+	{
+		std::fprintf(stderr, "memfd_create failed: %d\n", errno);
+		return nullptr;
+	}
 #else
 	const int fd = shm_open(name, O_CREAT | O_EXCL | O_RDWR, 0600);
 	if (fd < 0)
